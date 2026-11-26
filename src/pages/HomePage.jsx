@@ -5,7 +5,7 @@ import {
   FaHeart, FaShieldAlt, FaUserMd, FaRobot, FaQuoteLeft, FaStar,
   FaCheckCircle, FaArrowRight, FaUsers, FaLock, FaHandHoldingHeart
 } from 'react-icons/fa';
-import { FiArrowRight } from 'react-icons/fi';
+import { FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import PsychologistsCarousel from '../components/PsychologistsCarousel';
 import './HomePage.css';
 
@@ -75,6 +75,105 @@ const HomePage = () => {
 
   const handleMouseLeave = () => {
     isHoveredRef.current = false;
+  };
+
+  const [testiIndex, setTestiIndex] = useState(0);
+  const [visibleCards, setVisibleCards] = useState(3);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 640) {
+        setVisibleCards(1);
+      } else if (window.innerWidth <= 992) {
+        setVisibleCards(2);
+      } else {
+        setVisibleCards(3);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Demo content, replace with real reviews
+  const testimonials = [
+    {
+      text: "I was drowning in exam stress and couldn't talk to anyone. High on Healing matched me with an amazing counselor who understood exactly what I was going through.",
+      name: 'Ayesha K.',
+      role: 'LUMS Student',
+      rating: 5,
+      initial: 'A',
+    },
+    {
+      text: "The AI chatbot helped me during a panic attack at 2 AM. It calmed me down and booked a session for the next day. This platform literally saved me.",
+      name: 'Ahmed R.',
+      role: 'NUST Student',
+      rating: 5,
+      initial: 'A',
+    },
+    {
+      text: "As a psychology graduate, this platform gave me real-world experience and helped me earn while doing what I love — helping others.",
+      name: 'Fatima S.',
+      role: 'Counselor on High on Healing',
+      rating: 5,
+      initial: 'F',
+    },
+    {
+      text: "Honestly, I was skeptical about online therapy. But my first session felt like talking to someone who actually listened. I've already booked three more.",
+      name: 'Hamza T.',
+      role: 'University of Karachi Student',
+      rating: 5,
+      initial: 'H',
+    },
+    {
+      text: "Booking was so easy. I picked a slot after my classes and was in a session by evening. The reminders helped me stay consistent.",
+      name: 'Maryam I.',
+      role: 'FAST-NUCES Student',
+      rating: 5,
+      initial: 'M',
+    },
+    {
+      text: "I work long hours and could never find time for therapy. The late evening slots fit my schedule, and my counselor never made me feel rushed.",
+      name: 'Usman Q.',
+      role: 'Software Engineer',
+      rating: 5,
+      initial: 'U',
+    },
+    {
+      text: "Tracking my mood every day showed me patterns I never noticed. Now my counselor and I actually use those logs during our sessions.",
+      name: 'Hira M.',
+      role: 'IBA Student',
+      rating: 5,
+      initial: 'H',
+    },
+    {
+      text: "I was nervous about talking to anyone about the pressure at home. Doing it privately from my own room made it so much easier to open up.",
+      name: 'Bilal S.',
+      role: 'University of Sindh Student',
+      rating: 5,
+      initial: 'B',
+    },
+    {
+      text: "My counselor suggested small breathing and journaling routines that I actually stuck with. Exams were still tough, but I felt in control for the first time.",
+      name: 'Zoya A.',
+      role: 'COMSATS Student',
+      rating: 5,
+      initial: 'Z',
+    },
+  ];
+
+  const maxTestiIndex = Math.max(0, testimonials.length - visibleCards);
+
+  useEffect(() => {
+    setTestiIndex((prev) => Math.min(prev, maxTestiIndex));
+  }, [maxTestiIndex]);
+
+  const handlePrevTesti = () => {
+    setTestiIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNextTesti = () => {
+    setTestiIndex((prev) => Math.min(maxTestiIndex, prev + 1));
   };
 
   return (
@@ -330,49 +429,58 @@ const HomePage = () => {
           </motion.p>
 
           <motion.div
-            className="testimonials__grid"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-50px' }}
-            variants={staggerContainer}
+            variants={fadeUp}
           >
-            {[
-              {
-                text: "I was drowning in exam stress and couldn't talk to anyone. High on Healing matched me with an amazing counselor who understood exactly what I was going through.",
-                name: 'Ayesha K.',
-                role: 'LUMS Student',
-                rating: 5,
-              },
-              {
-                text: "The AI chatbot helped me during a panic attack at 2 AM. It calmed me down and booked a session for the next day. This platform literally saved me.",
-                name: 'Ahmed R.',
-                role: 'NUST Student',
-                rating: 5,
-              },
-              {
-                text: "As a psychology graduate, this platform gave me real-world experience and helped me earn while doing what I love — helping others.",
-                name: 'Fatima S.',
-                role: 'Counselor on High on Healing',
-                rating: 5,
-              },
-            ].map((t, i) => (
-              <motion.div className="testimonial-card glass-card" key={i} variants={fadeUp} custom={i}>
-                <FaQuoteLeft className="testimonial-card__quote" />
-                <p className="testimonial-card__text">{t.text}</p>
-                <div className="testimonial-card__stars">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <FaStar key={j} className="testimonial-card__star" />
+            <div className="testimonials-carousel">
+              <button
+                className="testimonials-carousel__btn testimonials-carousel__btn--prev"
+                onClick={handlePrevTesti}
+                disabled={testiIndex === 0}
+                aria-label="Previous review"
+              >
+                <FiChevronLeft />
+              </button>
+
+              <div className="testimonials-carousel__viewport">
+                <div
+                  className="testimonials__track"
+                  style={{
+                    transform: `translateX(calc(-${testiIndex} * ((100% - (var(--visible-count) - 1) * var(--gap)) / var(--visible-count) + var(--gap))))`,
+                  }}
+                >
+                  {testimonials.map((t, i) => (
+                    <div className="testimonial-card glass-card" key={i}>
+                      <FaQuoteLeft className="testimonial-card__quote" />
+                      <p className="testimonial-card__text">{t.text}</p>
+                      <div className="testimonial-card__stars">
+                        {[...Array(t.rating)].map((_, j) => (
+                          <FaStar key={j} className="testimonial-card__star" />
+                        ))}
+                      </div>
+                      <div className="testimonial-card__author">
+                        <div className="testimonial-card__avatar">{t.initial || t.name[0]}</div>
+                        <div>
+                          <p className="testimonial-card__name">{t.name}</p>
+                          <p className="testimonial-card__role">{t.role}</p>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
-                <div className="testimonial-card__author">
-                  <div className="testimonial-card__avatar">{t.name[0]}</div>
-                  <div>
-                    <p className="testimonial-card__name">{t.name}</p>
-                    <p className="testimonial-card__role">{t.role}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+              </div>
+
+              <button
+                className="testimonials-carousel__btn testimonials-carousel__btn--next"
+                onClick={handleNextTesti}
+                disabled={testiIndex >= maxTestiIndex}
+                aria-label="Next review"
+              >
+                <FiChevronRight />
+              </button>
+            </div>
           </motion.div>
         </div>
       </section>
