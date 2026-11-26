@@ -41,16 +41,16 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  background: linear-gradient(135deg, rgba(120, 90, 245, 0.42), rgba(70, 40, 170, 0.50));
+  backdrop-filter: blur(44px) saturate(190%) contrast(0.6) brightness(1.12);
+  -webkit-backdrop-filter: blur(44px) saturate(190%) contrast(0.6) brightness(1.12);
+  background: linear-gradient(135deg, rgba(120, 90, 245, 0.20), rgba(70, 40, 170, 0.26));
   border: 1px solid rgba(255, 255, 255, 0.40);
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
               inset 0 -1.5px 0 rgba(255, 255, 255, 0.18),
               inset 3px 3px 4px -3px rgba(255, 255, 255, 0.9),
               inset -3px -3px 4px -3px rgba(255, 255, 255, 0.6),
               inset 0 0 24px rgba(255, 255, 255, 0.14),
-              0 14px 40px rgba(35, 15, 100, 0.28);
+              0 10px 30px rgba(35, 15, 100, 0.18);
   transition: backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
               -webkit-backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
               background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
@@ -133,15 +133,15 @@
 }
 
 .navbar.is-scrolled .glass-bg {
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  background: linear-gradient(135deg, rgba(120, 90, 245, 0.48), rgba(70, 40, 170, 0.56));
+  backdrop-filter: blur(56px) saturate(210%) contrast(0.55) brightness(1.15);
+  -webkit-backdrop-filter: blur(56px) saturate(210%) contrast(0.55) brightness(1.15);
+  background: linear-gradient(135deg, rgba(120, 90, 245, 0.26), rgba(70, 40, 170, 0.32));
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.8),
               inset 0 -1.5px 0 rgba(255, 255, 255, 0.22),
               inset 3px 3px 4px -3px rgba(255, 255, 255, 0.95),
               inset -3px -3px 4px -3px rgba(255, 255, 255, 0.65),
               inset 0 0 28px rgba(255, 255, 255, 0.18),
-              0 18px 48px rgba(35, 15, 100, 0.35);
+              0 14px 36px rgba(35, 15, 100, 0.22);
 }
 
 /* Logo */
@@ -173,7 +173,7 @@
   font-size: 1.15rem;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 12px rgba(40, 20, 110, 0.35);
   white-space: nowrap;
 }
 
@@ -193,7 +193,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 12px rgba(40, 20, 110, 0.35);
   transition: all var(--transition-fast);
   position: relative;
   text-decoration: none;
@@ -247,7 +247,7 @@
   border-radius: 50%;
   align-items: center;
   justify-content: center;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 12px rgba(40, 20, 110, 0.35);
 }
 
 /* Mobile Dropdown Panel */
@@ -304,7 +304,7 @@
   padding: 10px 14px;
   border-radius: var(--radius-md);
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 12px rgba(40, 20, 110, 0.35);
   font-size: 0.95rem;
   font-weight: 500;
   text-decoration: none;
@@ -380,6 +380,23 @@
   .navbar__capsule--actions {
     min-height: 54px;
     padding: 6px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .glass-bg {
+    backdrop-filter: blur(30px) saturate(190%) contrast(0.6) brightness(1.12);
+    -webkit-backdrop-filter: blur(30px) saturate(190%) contrast(0.6) brightness(1.12);
+  }
+
+  .navbar.is-scrolled .glass-bg {
+    backdrop-filter: blur(40px) saturate(210%) contrast(0.55) brightness(1.15);
+    -webkit-backdrop-filter: blur(40px) saturate(210%) contrast(0.55) brightness(1.15);
+  }
+
+  .navbar__mobile-panel .glass-bg {
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
   }
 }
 
