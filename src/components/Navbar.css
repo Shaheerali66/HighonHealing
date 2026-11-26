@@ -5,18 +5,19 @@
   right: 0;
   z-index: 1000;
   padding: 0 16px;
-  background: transparent;
+  background: transparent !important;
   pointer-events: none;
-  transition: all var(--transition-normal);
+  --shine: 0%;
 }
 
 .navbar__container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   max-width: 1200px;
   margin: 0 auto;
+  background: transparent !important;
 }
 
 /* Glass Capsule Base */
@@ -24,55 +25,104 @@
   pointer-events: auto;
   display: flex;
   align-items: center;
-  background: rgba(91, 61, 214, 0.38);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  width: fit-content;
+  white-space: nowrap;
+  background: linear-gradient(135deg, rgba(110, 80, 235, 0.38), rgba(150, 110, 255, 0.22));
+  background-color: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 999px;
-  box-shadow: 0 8px 32px rgba(40, 20, 120, 0.18),
-              inset 0 1px 0 rgba(255, 255, 255, 0.45),
-              inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 40px rgba(60, 30, 160, 0.22),
+              inset 0 1.5px 0 rgba(255, 255, 255, 0.7),
+              inset 0 -1.5px 0 rgba(255, 255, 255, 0.2),
+              inset 0 0 20px rgba(255, 255, 255, 0.12);
   position: relative;
   overflow: hidden;
+  transition: padding 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              min-height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Top-left sheen effect */
+/* Top highlight sheen */
 .navbar__capsule::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, transparent 60%);
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 30%, transparent 55%);
   border-radius: inherit;
   pointer-events: none;
+  z-index: 1;
+}
+
+/* Diagonal glint band driven by --shine */
+.navbar__capsule::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  background-size: 250% 100%;
+  background-position: var(--shine, 0%) 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Fallback for browsers not supporting backdrop-filter */
 @supports not (backdrop-filter: blur(1px)) {
   .navbar__capsule {
-    background: rgba(80, 52, 190, 0.94);
+    background: rgba(75, 45, 185, 0.94) !important;
   }
 }
 
 /* Capsule 1: Main (Brand & Navigation) */
 .navbar__capsule--main {
-  padding: 6px 18px 6px 12px;
-  gap: 20px;
+  padding: 10px 32px 10px 16px;
+  gap: 36px;
+  min-height: 60px;
 }
 
 /* Capsule 2: Actions */
 .navbar__capsule--actions {
-  padding: 6px 10px;
-  gap: 8px;
+  padding: 8px 16px;
+  gap: 10px;
+  min-height: 60px;
   flex-shrink: 0;
+}
+
+/* Scroll Liquid Effect on Capsules */
+.navbar.is-scrolled .navbar__capsule {
+  backdrop-filter: blur(32px) saturate(210%) brightness(1.05);
+  -webkit-backdrop-filter: blur(32px) saturate(210%) brightness(1.05);
+  background-color: rgba(255, 255, 255, 0.18);
+  background-image: linear-gradient(135deg, rgba(100, 70, 230, 0.48), rgba(140, 100, 250, 0.3));
+  box-shadow: 0 12px 48px rgba(50, 20, 150, 0.28),
+              inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+              inset 0 -1.5px 0 rgba(255, 255, 255, 0.25),
+              inset 0 0 24px rgba(255, 255, 255, 0.18);
+}
+
+.navbar.is-scrolled .navbar__capsule--main {
+  padding: 6px 28px 6px 14px;
+  min-height: 52px;
+}
+
+.navbar.is-scrolled .navbar__capsule--actions {
+  padding: 4px 12px;
+  min-height: 52px;
 }
 
 /* Logo */
 .navbar__logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   z-index: 2;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .navbar__logo-img {
@@ -83,10 +133,11 @@
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-fast);
   display: block;
+  flex-shrink: 0;
 }
 
 .navbar__logo:hover .navbar__logo-img {
-  transform: scale(1.08) rotate(-6deg);
+  transform: scale(1.06);
 }
 
 .navbar__logo-text {
@@ -94,7 +145,7 @@
   font-size: 1.15rem;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
 }
 
@@ -102,21 +153,21 @@
 .navbar__links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 28px;
   list-style: none;
   margin: 0;
   padding: 0;
   z-index: 2;
+  position: relative;
 }
 
 .navbar__link {
   display: inline-block;
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  font-size: 0.88rem;
+  padding: 6px 4px;
+  font-size: 0.9rem;
   font-weight: 500;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: all var(--transition-fast);
   position: relative;
   text-decoration: none;
@@ -136,7 +187,7 @@
 
 .navbar__link-indicator {
   position: absolute;
-  bottom: 2px;
+  bottom: -2px;
   left: 50%;
   transform: translateX(-50%) scaleX(0);
   width: 18px;
@@ -154,10 +205,11 @@
 /* Buttons in Capsule 2 */
 .navbar__login-btn,
 .navbar__signup-btn {
-  padding: 7px 16px;
-  font-size: 0.84rem;
+  padding: 7px 18px;
+  font-size: 0.85rem;
   white-space: nowrap;
   z-index: 2;
+  position: relative;
 }
 
 /* Hamburger button */
@@ -172,7 +224,8 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  position: relative;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Mobile Dropdown Panel */
@@ -184,13 +237,14 @@
 
 .navbar__mobile-panel {
   pointer-events: auto;
-  background: rgba(75, 45, 185, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, rgba(95, 65, 215, 0.88), rgba(135, 95, 245, 0.82));
+  background-color: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(40, 20, 120, 0.35),
-              inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 16px 48px rgba(40, 20, 120, 0.35),
+              inset 0 1.5px 0 rgba(255, 255, 255, 0.65);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -204,7 +258,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
   border-radius: inherit;
   pointer-events: none;
 }
@@ -234,6 +288,7 @@
   padding: 0;
   margin: 0;
   z-index: 2;
+  position: relative;
 }
 
 .navbar__mobile-link {
@@ -241,7 +296,7 @@
   padding: 10px 14px;
   border-radius: var(--radius-md);
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   font-size: 0.95rem;
   font-weight: 500;
   text-decoration: none;
@@ -250,16 +305,17 @@
 
 .navbar__mobile-link:hover,
 .navbar__mobile-link--active {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
   font-weight: 700;
 }
 
 .navbar__mobile-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   margin: 6px 0;
   z-index: 2;
+  position: relative;
 }
 
 .navbar__mobile-actions {
@@ -267,6 +323,7 @@
   flex-direction: column;
   gap: 8px;
   z-index: 2;
+  position: relative;
 }
 
 .navbar__mobile-btn {
@@ -285,8 +342,17 @@
   pointer-events: auto;
 }
 
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .navbar__capsule,
+  .navbar__capsule::after {
+    transition: none !important;
+    background-position: 0 0 !important;
+  }
+}
+
 /* Responsive Breakpoints */
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .navbar__links {
     display: none;
   }
@@ -298,6 +364,14 @@
   .navbar__capsule--main {
     flex: 1;
     justify-content: space-between;
+    gap: 16px;
+    padding: 8px 18px 8px 14px;
+    min-height: 54px;
+  }
+
+  .navbar__capsule--actions {
+    min-height: 54px;
+    padding: 6px 12px;
   }
 }
 
@@ -308,6 +382,11 @@
 
   .navbar__capsule--actions {
     display: none;
+  }
+
+  .navbar__capsule--main {
+    width: 100%;
+    padding: 8px 14px;
   }
 
   .navbar__logo-text {

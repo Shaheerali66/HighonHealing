@@ -1,16 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX } from 'react-icons/fi';
 import logoImg from '../assets/logo.png';
 import './Navbar.css';
 
 const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const headerRef = useRef(null);
   const location = useLocation();
 
   useEffect(() => {
     setIsMobileOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          setIsScrolled(scrollY > 20);
+
+          if (headerRef.current) {
+            const shinePercent = (scrollY % 400) / 4;
+            headerRef.current.style.setProperty('--shine', `${shinePercent}%`);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -20,7 +49,11 @@ const Navbar = () => {
   ];
 
   return (
-    <header className="navbar" id="main-navbar">
+    <header
+      ref={headerRef}
+      className={`navbar ${isScrolled ? 'is-scrolled' : ''}`}
+      id="main-navbar"
+    >
       <div className="navbar__container container">
         {/* Capsule 1: Brand & Nav Links */}
         <div className="navbar__capsule navbar__capsule--main">
