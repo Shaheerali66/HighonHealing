@@ -7,6 +7,7 @@ import PricingPage from './pages/PricingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import ContactPage from './pages/ContactPage';
 import PsychologistPage from './pages/PsychologistPage';
+import PsychologistsListPage from './pages/PsychologistsListPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
@@ -24,6 +25,7 @@ function App() {
         {/* Public Pages */}
         <Route path="/" element={<><Navbar /><HomePage /><Footer /></>} />
         <Route path="/about" element={<><Navbar /><AboutPage /><Footer /></>} />
+        <Route path="/psychologists" element={<><Navbar /><PsychologistsListPage /><Footer /></>} />
         <Route path="/pricing" element={<><Navbar /><PricingPage /><Footer /></>} />
         <Route path="/privacy" element={<><Navbar /><PrivacyPage /><Footer /></>} />
         <Route path="/contact" element={<><Navbar /><ContactPage /><Footer /></>} />

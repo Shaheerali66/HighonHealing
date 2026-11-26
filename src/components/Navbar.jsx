@@ -22,6 +22,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'About Us', path: '/about' },
+    { name: 'Psychologists', path: '/psychologists' },
     { name: 'Pricing', path: '/pricing' },
     { name: 'Privacy Policy', path: '/privacy' },
     { name: 'Contact', path: '/contact' },

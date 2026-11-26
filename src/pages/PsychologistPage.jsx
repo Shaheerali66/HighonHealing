@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiMapPin, FiGlobe, FiBriefcase, FiAward, FiClock } from 'react-icons/fi';
 import { psychologists } from '../data/psychologists';
@@ -17,6 +17,15 @@ const fadeUp = {
 
 const PsychologistPage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/psychologists');
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -44,9 +53,14 @@ const PsychologistPage = () => {
     <main className="psych-detail-page section-padding">
       <div className="container">
         <div className="psych-detail__back">
-          <Link to="/#psychologists" className="psych-detail__back-link">
-            <FiArrowLeft /> Back to Home
-          </Link>
+          <button
+            onClick={handleBack}
+            className="psych-detail__back-link"
+            type="button"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+          >
+            <FiArrowLeft /> Back
+          </button>
         </div>
 
         <motion.div
