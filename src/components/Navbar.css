@@ -3,7 +3,7 @@
   top: 12px;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 9999 !important;
   padding: 0 16px;
   background: transparent !important;
   pointer-events: none;
@@ -20,105 +20,94 @@
   background: transparent !important;
 }
 
-/* Glass Capsule Base */
+/* Capsule Wrapper */
 .navbar__capsule {
   pointer-events: auto;
+  position: relative;
   display: flex;
   align-items: center;
   width: fit-content;
   white-space: nowrap;
-  background: rgba(40, 20, 110, 0.20);
-  backdrop-filter: blur(6px) saturate(170%) brightness(1.08);
-  -webkit-backdrop-filter: blur(6px) saturate(170%) brightness(1.08);
-  border: none;
   border-radius: 999px;
-  box-shadow: inset 3px 3px 3px -3px rgba(255, 255, 255, 0.95),
-              inset -3px -3px 3px -3px rgba(255, 255, 255, 0.75),
-              inset 0 0 0 1px rgba(255, 255, 255, 0.38),
-              inset 0 0 22px 2px rgba(255, 255, 255, 0.14),
-              0 12px 32px rgba(35, 15, 100, 0.20);
-  contain: layout paint;
-  position: relative;
-  overflow: hidden;
   transition: padding 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              min-height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              min-height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Pure Glass Background Layer */
+.glass-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: linear-gradient(135deg, rgba(120, 90, 245, 0.42), rgba(70, 40, 170, 0.50));
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+              inset 0 -1.5px 0 rgba(255, 255, 255, 0.18),
+              inset 3px 3px 4px -3px rgba(255, 255, 255, 0.9),
+              inset -3px -3px 4px -3px rgba(255, 255, 255, 0.6),
+              inset 0 0 24px rgba(255, 255, 255, 0.14),
+              0 14px 40px rgba(35, 15, 100, 0.28);
+  transition: backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              -webkit-backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
               background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Chromium Real Refraction Filters */
-@media (min-width: 768px) {
-  .navbar.hoh-refract .navbar__capsule--main {
-    backdrop-filter: blur(3px) url(#hoh-glass-left) saturate(170%) brightness(1.08);
-    -webkit-backdrop-filter: blur(3px) url(#hoh-glass-left) saturate(170%) brightness(1.08);
-  }
-
-  .navbar.hoh-refract .navbar__capsule--actions {
-    backdrop-filter: blur(3px) url(#hoh-glass-right) saturate(170%) brightness(1.08);
-    -webkit-backdrop-filter: blur(3px) url(#hoh-glass-right) saturate(170%) brightness(1.08);
-  }
-
-  .navbar.hoh-refract.is-scrolled .navbar__capsule--main {
-    backdrop-filter: blur(5px) url(#hoh-glass-left) saturate(175%) brightness(1.08);
-    -webkit-backdrop-filter: blur(5px) url(#hoh-glass-left) saturate(175%) brightness(1.08);
-  }
-
-  .navbar.hoh-refract.is-scrolled .navbar__capsule--actions {
-    backdrop-filter: blur(5px) url(#hoh-glass-right) saturate(175%) brightness(1.08);
-    -webkit-backdrop-filter: blur(5px) url(#hoh-glass-right) saturate(175%) brightness(1.08);
-  }
-}
-
-/* Sheen & Specular Glint */
-.navbar__capsule::before {
+/* ::before: top-left crystal highlight sheen + 1px bright arc along top edge */
+.glass-bg::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.05) 35%, transparent 60%);
   border-radius: inherit;
   pointer-events: none;
-  mix-blend-mode: soft-light;
-  z-index: 0;
+  background-image:
+    linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 0.8) 70%, transparent),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.14) 28%, transparent 55%);
+  background-size: 100% 1px, 100% 100%;
+  background-position: top center, center;
+  background-repeat: no-repeat;
 }
 
-.navbar__capsule::after {
+/* ::after: diagonal glint band driven by --shine */
+.glass-bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.25) 50%, transparent 60%);
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.30) 50%, transparent 60%);
   background-size: 250% 100%;
   background-position: var(--shine, 0%) 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* Fallback for browsers not supporting backdrop-filter */
-@supports not (backdrop-filter: blur(1px)) {
-  .navbar__capsule {
-    background: rgba(45, 22, 120, 0.94) !important;
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-bg {
+    background: rgba(70, 40, 170, 0.92) !important;
   }
 }
 
-/* Content wrapper that isolates text from backdrop refraction */
-.navbar__capsule-content {
+/* Content Layer (Keeps logo, text, buttons sharp) */
+.glass-content {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 36px;
   width: 100%;
-}
-
-.navbar__capsule-content--actions {
-  gap: 10px;
 }
 
 /* Capsule 1: Main (Brand & Navigation) */
 .navbar__capsule--main {
   padding: 10px 32px 10px 16px;
   min-height: 60px;
+}
+
+.navbar__capsule--main .glass-content {
+  gap: 36px;
 }
 
 /* Capsule 2: Actions */
@@ -128,18 +117,11 @@
   flex-shrink: 0;
 }
 
-/* Scroll Liquid Effect on Capsules */
-.navbar.is-scrolled .navbar__capsule {
-  background: rgba(40, 20, 110, 0.28);
-  backdrop-filter: blur(8px) saturate(175%) brightness(1.08);
-  -webkit-backdrop-filter: blur(8px) saturate(175%) brightness(1.08);
-  box-shadow: inset 3px 3px 3px -3px rgba(255, 255, 255, 0.95),
-              inset -3px -3px 3px -3px rgba(255, 255, 255, 0.75),
-              inset 0 0 0 1px rgba(255, 255, 255, 0.42),
-              inset 0 0 24px 3px rgba(255, 255, 255, 0.18),
-              0 16px 40px rgba(35, 15, 100, 0.28);
+.navbar__capsule--actions .glass-content {
+  gap: 10px;
 }
 
+/* Scrolled Liquid Effect */
 .navbar.is-scrolled .navbar__capsule--main {
   padding: 6px 28px 6px 14px;
   min-height: 52px;
@@ -148,6 +130,18 @@
 .navbar.is-scrolled .navbar__capsule--actions {
   padding: 4px 12px;
   min-height: 52px;
+}
+
+.navbar.is-scrolled .glass-bg {
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  background: linear-gradient(135deg, rgba(120, 90, 245, 0.48), rgba(70, 40, 170, 0.56));
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.8),
+              inset 0 -1.5px 0 rgba(255, 255, 255, 0.22),
+              inset 3px 3px 4px -3px rgba(255, 255, 255, 0.95),
+              inset -3px -3px 4px -3px rgba(255, 255, 255, 0.65),
+              inset 0 0 28px rgba(255, 255, 255, 0.18),
+              0 18px 48px rgba(35, 15, 100, 0.35);
 }
 
 /* Logo */
@@ -179,7 +173,7 @@
   font-size: 1.15rem;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   white-space: nowrap;
 }
 
@@ -199,7 +193,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   transition: all var(--transition-fast);
   position: relative;
   text-decoration: none;
@@ -253,10 +247,10 @@
   border-radius: 50%;
   align-items: center;
   justify-content: center;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-/* Mobile Dropdown Panel (Frosted Fallback) */
+/* Mobile Dropdown Panel */
 .navbar__mobile-container {
   max-width: 1200px;
   margin: 8px auto 0;
@@ -265,36 +259,24 @@
 
 .navbar__mobile-panel {
   pointer-events: auto;
-  background: rgba(40, 20, 110, 0.76);
-  backdrop-filter: blur(20px) saturate(170%) brightness(1.08);
-  -webkit-backdrop-filter: blur(20px) saturate(170%) brightness(1.08);
   border-radius: 24px;
-  box-shadow: inset 2px 2px 3px -2px rgba(255, 255, 255, 0.8),
-              inset -2px -2px 3px -2px rgba(255, 255, 255, 0.6),
-              inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-              0 16px 40px rgba(35, 15, 100, 0.35);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  animation: mobilePanelFade 0.2s ease-out;
   position: relative;
   overflow: hidden;
+  padding: 20px;
+  animation: mobilePanelFade 0.2s ease-out;
 }
 
-.navbar__mobile-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0.35) 0%, transparent 60%);
-  border-radius: inherit;
-  pointer-events: none;
+.navbar__mobile-panel .glass-bg {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: linear-gradient(135deg, rgba(120, 90, 245, 0.65), rgba(70, 40, 170, 0.72));
+  border-radius: 24px;
 }
 
-@supports not (backdrop-filter: blur(1px)) {
-  .navbar__mobile-panel {
-    background: rgba(45, 22, 120, 0.96);
-  }
+.navbar__mobile-content {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
 }
 
 @keyframes mobilePanelFade {
@@ -315,8 +297,6 @@
   gap: 4px;
   padding: 0;
   margin: 0;
-  z-index: 2;
-  position: relative;
 }
 
 .navbar__mobile-link {
@@ -324,7 +304,7 @@
   padding: 10px 14px;
   border-radius: var(--radius-md);
   color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   font-size: 0.95rem;
   font-weight: 500;
   text-decoration: none;
@@ -342,16 +322,12 @@
   height: 1px;
   background: rgba(255, 255, 255, 0.25);
   margin: 6px 0;
-  z-index: 2;
-  position: relative;
 }
 
 .navbar__mobile-actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 2;
-  position: relative;
 }
 
 .navbar__mobile-btn {
@@ -373,7 +349,8 @@
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .navbar__capsule,
-  .navbar__capsule::after {
+  .glass-bg,
+  .glass-bg::after {
     transition: none !important;
     background-position: 0 0 !important;
   }
@@ -395,7 +372,7 @@
     padding: 8px 18px 8px 14px;
   }
 
-  .navbar__capsule-content {
+  .navbar__capsule--main .glass-content {
     justify-content: space-between;
     gap: 16px;
   }
