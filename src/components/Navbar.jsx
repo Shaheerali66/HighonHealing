@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX } from 'react-icons/fi';
 import logoImg from '../assets/logo.png';
@@ -49,7 +50,9 @@ const Navbar = () => {
     { name: 'Psychologists', path: '/psychologists' },
   ];
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <header
       ref={headerRef}
       className={`navbar ${isScrolled ? 'is-scrolled' : ''}`}
@@ -149,7 +152,8 @@ const Navbar = () => {
       {isMobileOpen && (
         <div className="navbar__mobile-overlay" onClick={() => setIsMobileOpen(false)} />
       )}
-    </header>
+    </header>,
+    document.body
   );
 };
 
