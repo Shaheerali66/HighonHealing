@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaCheck, FaStar, FaCrown, FaRocket } from 'react-icons/fa';
 import { FiArrowRight } from 'react-icons/fi';
-import { subscribePricing } from '../services/db';
+import { getPricingPlans, subscribePricing } from '../services/db';
 import './PricingPage.css';
 
 const fadeUp = {
@@ -16,20 +16,40 @@ const fadeUp = {
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.15 } } };
 
+const planIcons = {
+  starter: <FaStar />,
+  growth: <FaRocket />,
+  premium: <FaCrown />,
+};
+
+const formatPrice = (price) => {
+  const num = Number(String(price).replace(/[^0-9.]/g, ''));
+  return isNaN(num) ? String(price) : num.toLocaleString();
+};
+
+const mapPlans = (rawPlans) => {
+  if (!Array.isArray(rawPlans) || rawPlans.length === 0) return [];
+  return rawPlans.map((p) => ({
+    ...p,
+    icon: planIcons[p.id?.toLowerCase()] || <FaStar />,
+    formattedPrice: formatPrice(p.price),
+    features: Array.isArray(p.features) ? p.features : [],
+  }));
+};
+
 const PricingPage = () => {
-  const [plans, setPlans] = useState([]);
+  // Always initialize with valid plans so the page is NEVER blank
+  const [plans, setPlans] = useState(() => mapPlans(getPricingPlans()));
 
   useEffect(() => {
     const unsub = subscribePricing((dbPlans) => {
-      const mapped = dbPlans.map((p) => ({
-        ...p,
-        icon: p.id === 'starter' ? <FaStar /> : p.id === 'growth' ? <FaRocket /> : <FaCrown />,
-        price: Number(p.price).toLocaleString(),
-      }));
-      setPlans(mapped);
+      if (Array.isArray(dbPlans) && dbPlans.length > 0) {
+        setPlans(mapPlans(dbPlans));
+      }
     });
     return unsub;
   }, []);
+
   return (
     <main className="pricing-page" id="pricing-page">
       <section className="pricing-hero">
@@ -58,7 +78,7 @@ const PricingPage = () => {
             {plans.map((plan, i) => (
               <motion.div
                 className={`pricing-card glass-card ${plan.popular ? 'pricing-card--popular' : ''}`}
-                key={i}
+                key={plan.id || i}
                 variants={fadeUp}
                 custom={i}
               >
@@ -70,11 +90,11 @@ const PricingPage = () => {
                 <p className="pricing-card__desc">{plan.desc}</p>
                 <div className="pricing-card__price">
                   <span className="pricing-card__currency">Rs.</span>
-                  <span className="pricing-card__amount">{plan.price}</span>
+                  <span className="pricing-card__amount">{plan.formattedPrice || plan.price}</span>
                   <span className="pricing-card__period">{plan.period}</span>
                 </div>
                 <ul className="pricing-card__features">
-                  {plan.features.map((f, j) => (
+                  {(plan.features || []).map((f, j) => (
                     <li key={j} className="pricing-card__feature">
                       <FaCheck className="pricing-card__check" style={{ color: plan.color }} />
                       <span>{f}</span>

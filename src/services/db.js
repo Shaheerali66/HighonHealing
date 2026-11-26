@@ -288,49 +288,162 @@ export const deletePsychologist = (id) => {
 // ==========================================
 // PRICING API
 // ==========================================
+export const defaultPricingPlans = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: 500,
+    period: '/month',
+    desc: 'Perfect for students who want to explore mental wellness resources at a minimal cost.',
+    features: [
+      'AI Chatbot Access (24/7)',
+      '1 Monthly Session (30 min)',
+      'Basic Chat Support',
+      'Mood Tracking Journal',
+      'Self-Help Resources Library',
+    ],
+    cta: 'Get Started',
+    popular: false,
+    color: 'var(--pink-400)',
+  },
+  {
+    id: 'growth',
+    name: 'Growth',
+    price: 1500,
+    period: '/month',
+    desc: 'Our most popular plan for students who need regular, consistent support.',
+    features: [
+      'Everything in Starter',
+      '4 Monthly Sessions (45 min)',
+      'Priority Chat Support',
+      'Progress Reports',
+      'Personalized Wellness Plan',
+      'Group Support Sessions',
+    ],
+    cta: 'Choose Growth',
+    popular: true,
+    color: 'var(--pink-600)',
+  },
+  {
+    id: 'premium',
+    name: 'Premium Care',
+    price: 3000,
+    period: '/month',
+    desc: 'Comprehensive care with senior graduates for students who need dedicated, intensive support.',
+    features: [
+      'Everything in Growth',
+      '4 Video Sessions (60 min)',
+      'Unlimited Messaging',
+      'Senior Graduate Counselor',
+      'Custom Progress Tracking',
+      'Emergency Chat Support',
+      'Family Session (1/month)',
+    ],
+    cta: 'Go Premium',
+    popular: false,
+    color: 'var(--pink-800)',
+  },
+];
+
 export const getPricingPlans = () => {
   const db = loadDB();
-  return [...db.pricing];
+  if (!db.pricing || !Array.isArray(db.pricing) || db.pricing.length === 0) {
+    db.pricing = defaultPricingPlans;
+    saveDB(db);
+  }
+
+  // Always return all 3 plans, merging any saved price overrides safely
+  return defaultPricingPlans.map((def) => {
+    const found = db.pricing.find(
+      (p) => p && p.id && p.id.toLowerCase() === def.id.toLowerCase()
+    );
+    let parsedPrice = def.price;
+    if (found && found.price != null) {
+      const num = Number(String(found.price).replace(/[^0-9.]/g, ''));
+      if (!isNaN(num) && num > 0) parsedPrice = num;
+    }
+    return {
+      ...def,
+      ...(found || {}),
+      price: parsedPrice,
+      desc: found?.desc || found?.description || def.desc,
+      features: Array.isArray(found?.features) && found.features.length > 0 ? found.features : def.features,
+    };
+  });
 };
 
 export const subscribePricing = (callback) => {
-  const handler = () => callback(getPricingPlans());
+  const handler = () => {
+    try {
+      callback(getPricingPlans());
+    } catch (e) {
+      console.error('Pricing subscription error:', e);
+      callback(defaultPricingPlans);
+    }
+  };
   listeners.pricing.add(handler);
   handler();
   return () => listeners.pricing.delete(handler);
 };
 
-export const updatePricingPlan = async (planId, newPrice) => {
-  const numericPrice = Number(newPrice);
-  if (isNaN(numericPrice) || numericPrice < 0) {
-    throw new Error('Please enter a valid positive price.');
-  }
-
-  // If Supabase configured, update on remote DB
-  if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase
-      .from('pricing_plans')
-      .update({ price: numericPrice, updated_at: new Date().toISOString() })
-      .eq('id', planId);
-    if (error) console.error('Supabase pricing update error', error);
-  }
-
+export const updatePricingPlans = async (priceMap) => {
   const db = loadDB();
-  const plan = db.pricing.find(p => p.id.toLowerCase() === planId.toLowerCase());
-  if (plan) {
-    plan.price = numericPrice;
-    db.activities.unshift({
-      id: `act-${Date.now()}`,
-      text: `Pricing updated for ${plan.name} to Rs. ${numericPrice.toLocaleString()}`,
-      time: 'Just now',
-      type: 'payment',
-    });
-    saveDB(db);
-    emitChange('pricing', db.pricing);
-    emitChange('activities', db.activities);
-    return plan;
+  if (!db.pricing || !Array.isArray(db.pricing)) {
+    db.pricing = defaultPricingPlans;
   }
-  throw new Error('Plan not found');
+
+  const errors = [];
+  for (const [id, val] of Object.entries(priceMap)) {
+    const num = Number(String(val).replace(/[^0-9.]/g, ''));
+    if (isNaN(num) || num <= 0) {
+      errors.push(`Invalid price for ${id}`);
+      continue;
+    }
+
+    let match = db.pricing.find((p) => p.id && p.id.toLowerCase() === id.toLowerCase());
+    if (!match) {
+      const def = defaultPricingPlans.find((p) => p.id.toLowerCase() === id.toLowerCase());
+      if (def) {
+        match = { ...def };
+        db.pricing.push(match);
+      }
+    }
+
+    if (match) {
+      match.price = num;
+      // If Supabase configured, update on remote DB
+      if (isSupabaseConfigured && supabase) {
+        supabase
+          .from('pricing_plans')
+          .update({ price: num, updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .then(({ error }) => {
+            if (error) console.error('Supabase pricing update error', error);
+          });
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.join(', '));
+  }
+
+  db.activities.unshift({
+    id: `act-${Date.now()}`,
+    text: 'Platform pricing updated',
+    time: 'Just now',
+    type: 'payment',
+  });
+
+  saveDB(db);
+  const updatedPlans = getPricingPlans();
+  emitChange('pricing', updatedPlans);
+  emitChange('activities', db.activities);
+  return updatedPlans;
+};
+
+export const updatePricingPlan = async (planId, newPrice) => {
+  return updatePricingPlans({ [planId]: newPrice });
 };
 
 // ==========================================

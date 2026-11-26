@@ -13,7 +13,7 @@ import {
   subscribeApprovals, approveCounselorApplication, rejectCounselorApplication,
   subscribeQueries, replyToQuery, closeQueryInDB,
   subscribeAdminStats, subscribeActivities, subscribeSessions,
-  subscribePricing, updatePricingPlan
+  subscribePricing, updatePricingPlan, updatePricingPlans
 } from '../../services/db';
 import { logoutUser } from '../../services/auth';
 import logoImg from '../../assets/logo.png';
@@ -113,15 +113,16 @@ const AdminDashboard = () => {
   };
 
   const handleUpdatePricing = async () => {
-    if (Number(starterPrice) <= 0 || Number(growthPrice) <= 0 || Number(premiumPrice) <= 0) {
+    const s = Number(starterPrice);
+    const g = Number(growthPrice);
+    const p = Number(premiumPrice);
+    if (isNaN(s) || s <= 0 || isNaN(g) || g <= 0 || isNaN(p) || p <= 0) {
       showToast('Error: All prices must be positive numbers.');
       return;
     }
     setSavingPricing(true);
     try {
-      await updatePricingPlan('starter', Number(starterPrice));
-      await updatePricingPlan('growth', Number(growthPrice));
-      await updatePricingPlan('premium', Number(premiumPrice));
+      await updatePricingPlans({ starter: s, growth: g, premium: p });
       showToast('Pricing updated successfully!');
     } catch (err) {
       showToast(err.message || 'Failed to update pricing');

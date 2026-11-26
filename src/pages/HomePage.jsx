@@ -85,8 +85,13 @@ const HomePage = () => {
 
   useEffect(() => {
     const unsub = subscribePricing((plans) => {
-      const starter = plans.find((p) => p.id === 'starter');
-      if (starter) setStarterPrice(Number(starter.price).toLocaleString());
+      if (Array.isArray(plans)) {
+        const starter = plans.find((p) => p.id === 'starter');
+        if (starter && starter.price != null) {
+          const num = Number(String(starter.price).replace(/[^0-9.]/g, ''));
+          setStarterPrice(isNaN(num) ? '500' : num.toLocaleString());
+        }
+      }
     });
     return unsub;
   }, []);
