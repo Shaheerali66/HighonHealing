@@ -34,6 +34,7 @@ const Footer = () => {
               <li><Link to="/" className="footer__link">Home</Link></li>
               <li><Link to="/about" className="footer__link">About Us</Link></li>
               <li><Link to="/pricing" className="footer__link">Pricing</Link></li>
+              <li><Link to="/psychologists" className="footer__link">Psychologists</Link></li>
               <li><Link to="/contact" className="footer__link">Contact</Link></li>
             </ul>
           </div>

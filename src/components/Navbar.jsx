@@ -5,15 +5,8 @@ import logoImg from '../assets/logo.png';
 import './Navbar.css';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     setIsMobileOpen(false);
@@ -22,37 +15,46 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'About Us', path: '/about' },
-    { name: 'Psychologists', path: '/psychologists' },
     { name: 'Pricing', path: '/pricing' },
-    { name: 'Privacy Policy', path: '/privacy' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'Psychologists', path: '/psychologists' },
   ];
 
   return (
-    <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`} id="main-navbar">
+    <header className="navbar" id="main-navbar">
       <div className="navbar__container container">
-        <Link to="/" className="navbar__logo" id="nav-logo">
-          <img src={logoImg} alt="High on Healing" className="navbar__logo-img" />
-          <span className="navbar__logo-text">
-            High on Healing
-          </span>
-        </Link>
+        {/* Capsule 1: Brand & Nav Links */}
+        <div className="navbar__capsule navbar__capsule--main">
+          <Link to="/" className="navbar__logo" id="nav-logo">
+            <img src={logoImg} alt="High on Healing" className="navbar__logo-img" />
+            <span className="navbar__logo-text">High on Healing</span>
+          </Link>
 
-        <ul className={`navbar__links ${isMobileOpen ? 'navbar__links--open' : ''}`} id="nav-links">
-          {navLinks.map((link) => (
-            <li key={link.path}>
-              <Link
-                to={link.path}
-                className={`navbar__link ${location.pathname === link.path ? 'navbar__link--active' : ''}`}
-              >
-                {link.name}
-                <span className="navbar__link-indicator" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+          <ul className="navbar__links" id="nav-links">
+            {navLinks.map((link) => (
+              <li key={link.path}>
+                <Link
+                  to={link.path}
+                  className={`navbar__link ${location.pathname === link.path ? 'navbar__link--active' : ''}`}
+                >
+                  {link.name}
+                  <span className="navbar__link-indicator" />
+                </Link>
+              </li>
+            ))}
+          </ul>
 
-        <div className="navbar__actions">
+          <button
+            className="navbar__hamburger"
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
+            id="nav-hamburger"
+            aria-label="Toggle menu"
+          >
+            {isMobileOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+          </button>
+        </div>
+
+        {/* Capsule 2: Auth Actions */}
+        <div className="navbar__capsule navbar__capsule--actions">
           <Link to="/login" className="btn btn-secondary navbar__login-btn" id="nav-login-btn">
             Log In
           </Link>
@@ -60,22 +62,51 @@ const Navbar = () => {
             Get Started
           </Link>
         </div>
-
-        <button
-          className="navbar__hamburger"
-          onClick={() => setIsMobileOpen(!isMobileOpen)}
-          id="nav-hamburger"
-          aria-label="Toggle menu"
-        >
-          {isMobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-        </button>
       </div>
+
+      {/* Mobile Dropdown Panel */}
+      {isMobileOpen && (
+        <div className="navbar__mobile-container container">
+          <div className="navbar__mobile-panel">
+            <ul className="navbar__mobile-links">
+              {navLinks.map((link) => (
+                <li key={link.path}>
+                  <Link
+                    to={link.path}
+                    className={`navbar__mobile-link ${location.pathname === link.path ? 'navbar__mobile-link--active' : ''}`}
+                    onClick={() => setIsMobileOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="navbar__mobile-divider" />
+            <div className="navbar__mobile-actions">
+              <Link
+                to="/login"
+                className="btn btn-secondary navbar__mobile-btn"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                Log In
+              </Link>
+              <Link
+                to="/signup"
+                className="btn btn-primary navbar__mobile-btn"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div className="navbar__mobile-overlay" onClick={() => setIsMobileOpen(false)} />
       )}
-    </nav>
+    </header>
   );
 };
 
