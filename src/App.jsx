@@ -6,6 +6,7 @@ import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import ContactPage from './pages/ContactPage';
+import PsychologistPage from './pages/PsychologistPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
@@ -26,6 +27,7 @@ function App() {
         <Route path="/pricing" element={<><Navbar /><PricingPage /><Footer /></>} />
         <Route path="/privacy" element={<><Navbar /><PrivacyPage /><Footer /></>} />
         <Route path="/contact" element={<><Navbar /><ContactPage /><Footer /></>} />
+        <Route path="/psychologists/:slug" element={<><Navbar /><PsychologistPage /><Footer /></>} />
 
         {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />

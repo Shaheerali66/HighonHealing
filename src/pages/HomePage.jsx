@@ -6,6 +6,7 @@ import {
   FaCheckCircle, FaArrowRight, FaUsers, FaLock, FaHandHoldingHeart
 } from 'react-icons/fa';
 import { FiArrowRight } from 'react-icons/fi';
+import PsychologistsCarousel from '../components/PsychologistsCarousel';
 import './HomePage.css';
 
 const fadeUp = {
@@ -257,6 +258,9 @@ const HomePage = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* ============ PSYCHOLOGISTS ============ */}
+      <PsychologistsCarousel />
 
       {/* ============ HOW IT WORKS ============ */}
       <section className="how-it-works section-padding" id="how-it-works-section">
