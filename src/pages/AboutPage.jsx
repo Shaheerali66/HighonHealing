@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { FaHeart, FaHandHoldingHeart, FaBullseye, FaUsers, FaLightbulb } from 'react-icons/fa';
+import { stats } from '../data/stats';
 import './AboutPage.css';
 
 const fadeUp = {
@@ -39,12 +40,12 @@ const AboutPage = () => {
                 <FaHandHoldingHeart size={64} />
               </div>
               <div className="about-story__stat-card about-story__stat-card--1 float-animation">
-                <span className="about-story__stat-num">2,000+</span>
+                <span className="about-story__stat-num">{stats.happyStudents}</span>
                 <span className="about-story__stat-label">Lives Touched</span>
               </div>
               <div className="about-story__stat-card about-story__stat-card--2 float-animation" style={{ animationDelay: '1.5s' }}>
-                <span className="about-story__stat-num">150+</span>
-                <span className="about-story__stat-label">Counselors</span>
+                <span className="about-story__stat-num">{stats.counselors}</span>
+                <span className="about-story__stat-label">Psychologists</span>
               </div>
             </motion.div>
 

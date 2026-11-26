@@ -14,8 +14,11 @@ const fadeUp = {
 };
 
 const PsychologistsCarousel = () => {
-  const row1 = psychologists.slice(0, 8); // 1 to 8
-  const row2 = psychologists.slice(8, 15); // 9 to 15
+  const row1 = psychologists.slice(0, 3);
+  const row2 = psychologists.slice(3, 6);
+
+  // Repeat each row 4× so each half of the track is wider than the viewport
+  const repeat = (arr, times) => Array.from({ length: times }, () => arr).flat();
 
   const renderCard = (p, key) => (
     <Link to={`/psychologists/${p.slug}`} className="psych-card glass-card" key={key}>
@@ -55,16 +58,16 @@ const PsychologistsCarousel = () => {
           {/* Row 1: Left to Right */}
           <div className="psych-carousel__row">
             <div className="psych-carousel__track psych-carousel__track--ltr">
-              {row1.map((p, i) => renderCard(p, `r1-a-${i}`))}
-              {row1.map((p, i) => renderCard(p, `r1-b-${i}`))}
+              {repeat(row1, 4).map((p, i) => renderCard(p, `r1-a-${i}`))}
+              {repeat(row1, 4).map((p, i) => renderCard(p, `r1-b-${i}`))}
             </div>
           </div>
 
           {/* Row 2: Right to Left */}
           <div className="psych-carousel__row">
             <div className="psych-carousel__track psych-carousel__track--rtl">
-              {row2.map((p, i) => renderCard(p, `r2-a-${i}`))}
-              {row2.map((p, i) => renderCard(p, `r2-b-${i}`))}
+              {repeat(row2, 4).map((p, i) => renderCard(p, `r2-a-${i}`))}
+              {repeat(row2, 4).map((p, i) => renderCard(p, `r2-b-${i}`))}
             </div>
           </div>
         </div>

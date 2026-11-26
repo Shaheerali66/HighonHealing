@@ -6,6 +6,7 @@ import {
   FaCheckCircle, FaArrowRight, FaUsers, FaLock, FaHandHoldingHeart
 } from 'react-icons/fa';
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { stats } from '../data/stats';
 import PsychologistsCarousel from '../components/PsychologistsCarousel';
 import './HomePage.css';
 
@@ -160,6 +161,48 @@ const HomePage = () => {
       rating: 5,
       initial: 'Z',
     },
+    {
+      text: "I used to bottle everything up. After a few sessions I could finally say what I was feeling without being scared of being judged.",
+      name: 'Sana R.',
+      role: 'Bahria University Student',
+      rating: 5,
+      initial: 'S',
+    },
+    {
+      text: "My counselor was patient and never rushed me. I left every session with one small thing to try, and it actually helped.",
+      name: 'Daniyal K.',
+      role: 'NED University Student',
+      rating: 5,
+      initial: 'D',
+    },
+    {
+      text: "I was dealing with burnout during my final year. Having someone to talk to who actually gets student life made a real difference.",
+      name: 'Noor F.',
+      role: 'University of Sindh Student',
+      rating: 5,
+      initial: 'N',
+    },
+    {
+      text: "Affordable and easy to book. I didn't have to explain my whole story from scratch each time, which was a big relief.",
+      name: 'Taha M.',
+      role: 'Aga Khan University Student',
+      rating: 5,
+      initial: 'T',
+    },
+    {
+      text: "I tried the chatbot first just out of curiosity, then booked a real session. Both felt warm and genuine, not robotic.",
+      name: 'Iqra B.',
+      role: 'Karachi University Student',
+      rating: 5,
+      initial: 'I',
+    },
+    {
+      text: "Sessions fit around my shifts and my family, which is rare. I feel calmer and I'm sleeping better than I have in months.",
+      name: 'Rizwan A.',
+      role: 'Working Professional',
+      rating: 5,
+      initial: 'R',
+    },
   ];
 
   const maxTestiIndex = Math.max(0, testimonials.length - visibleCards);
@@ -196,7 +239,7 @@ const HomePage = () => {
           >
             <motion.div className="hero__badge" variants={fadeUp}>
               <FaHeart className="hero__badge-icon" />
-              <span>Trusted by 2,000+ Students</span>
+              <span>Trusted by {stats.happyStudents} Students</span>
             </motion.div>
 
             <motion.h1 className="hero__title" variants={fadeUp}>
@@ -221,17 +264,17 @@ const HomePage = () => {
 
             <motion.div className="hero__stats" variants={fadeUp}>
               <div className="hero__stat">
-                <span className="hero__stat-number">2K+</span>
+                <span className="hero__stat-number">{stats.happyStudents}</span>
                 <span className="hero__stat-label">Happy Students</span>
               </div>
               <div className="hero__stat-divider" />
               <div className="hero__stat">
-                <span className="hero__stat-number">150+</span>
-                <span className="hero__stat-label">Counselors</span>
+                <span className="hero__stat-number">{stats.counselors}</span>
+                <span className="hero__stat-label">Psychologists</span>
               </div>
               <div className="hero__stat-divider" />
               <div className="hero__stat">
-                <span className="hero__stat-number">98%</span>
+                <span className="hero__stat-number">{stats.satisfaction}</span>
                 <span className="hero__stat-label">Satisfaction</span>
               </div>
             </motion.div>
