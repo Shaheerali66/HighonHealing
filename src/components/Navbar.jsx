@@ -48,6 +48,7 @@ const Navbar = () => {
     { name: 'About Us', path: '/about' },
     { name: 'Pricing', path: '/pricing' },
     { name: 'Psychologists', path: '/psychologists' },
+    { name: 'Healing Stories', path: '/stories' },
   ];
 
   if (typeof document === 'undefined') return null;

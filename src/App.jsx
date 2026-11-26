@@ -8,6 +8,8 @@ import PrivacyPage from './pages/PrivacyPage';
 import ContactPage from './pages/ContactPage';
 import PsychologistPage from './pages/PsychologistPage';
 import PsychologistsListPage from './pages/PsychologistsListPage';
+import StoriesListPage from './pages/StoriesListPage';
+import StoryPage from './pages/StoryPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
@@ -30,6 +32,8 @@ function App() {
         <Route path="/privacy" element={<><Navbar /><PrivacyPage /><Footer /></>} />
         <Route path="/contact" element={<><Navbar /><ContactPage /><Footer /></>} />
         <Route path="/psychologists/:slug" element={<><Navbar /><PsychologistPage /><Footer /></>} />
+        <Route path="/stories" element={<><Navbar /><StoriesListPage /><Footer /></>} />
+        <Route path="/stories/:slug" element={<><Navbar /><StoryPage /><Footer /></>} />
 
         {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />

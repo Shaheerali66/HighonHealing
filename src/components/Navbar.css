@@ -120,7 +120,7 @@
 }
 
 .navbar__capsule--main .glass-content {
-  gap: 36px;
+  gap: 22px;
 }
 
 /* Capsule 2: Actions */
@@ -194,7 +194,7 @@
 .navbar__links {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 22px;
   list-style: none;
   margin: 0;
   padding: 0;
