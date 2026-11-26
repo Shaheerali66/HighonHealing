@@ -95,20 +95,23 @@ const AboutPage = () => {
       <section className="about-team section-padding">
         <div className="container">
           <motion.h2 className="section-title" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            Meet The <span className="accent-text">Team</span>
+            Meet The <span className="accent-text">Force</span> Behind It
           </motion.h2>
           <motion.p className="section-subtitle" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            Passionate individuals dedicated to changing the mental health landscape.
+            The minds and hearts behind High on Healing, building a safer space for every mind that needs one.
           </motion.p>
 
           <motion.div className="about-team__grid" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             {[
-              { name: 'Zainab', role: 'Founder & Lead', initial: 'Z' },
-              { name: 'Sarah Ahmed', role: 'Clinical Advisor', initial: 'S' },
-              { name: 'Ali Raza', role: 'Tech Lead', initial: 'A' },
+              { name: 'Mahnoor Aziz', role: 'Founder & Lead', initial: 'M', image: '' },
+              { name: 'Zainab Memon', role: 'Co-Founder & Vision Architect', initial: 'Z', image: '' },
+              { name: 'Mishal', role: 'Head of Community & Care', initial: 'M', image: '' },
+              { name: 'Jawahir Lal', role: 'Product & Growth Strategist', initial: 'J', image: '' },
             ].map((m, i) => (
               <motion.div className="about-team-card glass-card" key={i} variants={fadeUp} custom={i}>
-                <div className="about-team-card__avatar">{m.initial}</div>
+                <div className="about-team-card__avatar">
+                  {m.image ? <img src={m.image} alt={m.name} /> : m.initial}
+                </div>
                 <h3 className="about-team-card__name">{m.name}</h3>
                 <p className="about-team-card__role">{m.role}</p>
               </motion.div>
