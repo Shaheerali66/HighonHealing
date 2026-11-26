@@ -1,91 +1,156 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FaUsers, FaUserMd, FaCalendarAlt, FaChartBar,
+  FaUsers, FaUserMd, FaCalendarAlt,
   FaSignOutAlt, FaCheckCircle, FaTimesCircle, FaClock,
   FaEnvelope, FaUserGraduate, FaCheck, FaTimes, FaTrash,
-  FaBan, FaReply
+  FaReply
 } from 'react-icons/fa';
-import { FiUsers, FiUserCheck, FiBarChart2, FiInbox, FiSettings, FiCpu } from 'react-icons/fi';
-import AIChatbot from '../../components/AIChatbot';
+import { FiUsers, FiUserCheck, FiBarChart2, FiInbox, FiSettings } from 'react-icons/fi';
+import {
+  subscribeUsers, toggleUserStatus, deleteUserFromDB,
+  subscribeApprovals, approveCounselorApplication, rejectCounselorApplication,
+  subscribeQueries, replyToQuery, closeQueryInDB,
+  subscribeAdminStats, subscribeActivities, subscribeSessions,
+  subscribePricing, updatePricingPlan
+} from '../../services/db';
+import { logoutUser } from '../../services/auth';
 import logoImg from '../../assets/logo.png';
 import './Dashboards.css';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [toastMsg, setToastMsg] = useState('');
 
   const showToast = (msg) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
+    setTimeout(() => setToastMsg(''), 3500);
   };
 
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Ahmed R.', role: 'Student', email: 'ahmed@email.com', status: 'Active', joined: 'Jan 2026' },
-    { id: 2, name: 'Dr. Amna Shah', role: 'Counselor', email: 'amna@email.com', status: 'Active', joined: 'Dec 2025' },
-    { id: 3, name: 'Fatima K.', role: 'Student', email: 'fatima@email.com', status: 'Active', joined: 'Feb 2026' },
-    { id: 4, name: 'Hira Malik', role: 'Counselor', email: 'hira@email.com', status: 'Active', joined: 'Mar 2026' },
-    { id: 5, name: 'Usman Ali', role: 'Counselor', email: 'usman@email.com', status: 'Inactive', joined: 'Nov 2025' },
-  ]);
+  // Database-driven state
+  const [stats, setStats] = useState({ totalStudents: 0, counselors: 0, sessionsToday: 0, pendingReviews: 0 });
+  const [users, setUsers] = useState([]);
+  const [approvals, setApprovals] = useState([]);
+  const [queries, setQueries] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [pricing, setPricing] = useState([]);
 
-  const [approvals, setApprovals] = useState([
-    { id: 1, name: 'Bilal Ahmed', qualification: 'BSc Psychology (Honors)', university: 'Punjab University', applied: '2 days ago' },
-    { id: 2, name: 'Nida Farooq', qualification: 'MSc Applied Psychology', university: 'GCU Lahore', applied: '1 day ago' },
-    { id: 3, name: 'Tariq Hassan', qualification: 'BSc Psychology', university: 'FAST Islamabad', applied: '3 hours ago' },
-  ]);
+  // Editable pricing inputs
+  const [starterPrice, setStarterPrice] = useState(500);
+  const [growthPrice, setGrowthPrice] = useState(1500);
+  const [premiumPrice, setPremiumPrice] = useState(3000);
+  const [savingPricing, setSavingPricing] = useState(false);
 
-  const [queries, setQueries] = useState([
-    { id: 1, from: 'Ahmed R.', role: 'Student', subject: 'Cannot join video session', message: 'I keep getting a connection error when I try to join my scheduled video session. Please help.', time: '1 hour ago', status: 'open' },
-    { id: 2, from: 'Hira Malik', role: 'Counselor', subject: 'Payment not received', message: 'My earnings for last month have not been transferred yet. Can you please check?', time: '3 hours ago', status: 'open' },
-    { id: 3, from: 'Sana M.', role: 'Student', subject: 'Change counselor request', message: 'I would like to switch to a different counselor. How can I do this?', time: '1 day ago', status: 'open' },
-  ]);
   const [replyModal, setReplyModal] = useState(null);
   const [replyText, setReplyText] = useState('');
 
+  // Real-time subscriptions
+  useEffect(() => {
+    const unsubStats = subscribeAdminStats(setStats);
+    const unsubUsers = subscribeUsers(setUsers);
+    const unsubApprovals = subscribeApprovals(setApprovals);
+    const unsubQueries = subscribeQueries(setQueries);
+    const unsubActivities = subscribeActivities(setActivities);
+    const unsubSessions = subscribeSessions(setSessions);
+    const unsubPricing = subscribePricing((plans) => {
+      setPricing(plans);
+      const st = plans.find(p => p.id === 'starter');
+      const gr = plans.find(p => p.id === 'growth');
+      const pr = plans.find(p => p.id === 'premium');
+      if (st) setStarterPrice(st.price);
+      if (gr) setGrowthPrice(gr.price);
+      if (pr) setPremiumPrice(pr.price);
+    });
+
+    return () => {
+      unsubStats();
+      unsubUsers();
+      unsubApprovals();
+      unsubQueries();
+      unsubActivities();
+      unsubSessions();
+      unsubPricing();
+    };
+  }, []);
+
   const handleApprove = (id) => {
-    const person = approvals.find(a => a.id === id);
-    setApprovals(prev => prev.filter(a => a.id !== id));
-    if (person) {
-      setUsers(prev => [...prev, { id: Date.now(), name: person.name, role: 'Counselor', email: `${person.name.split(' ')[0].toLowerCase()}@email.com`, status: 'Active', joined: 'Apr 2026' }]);
-      showToast(`${person.name} approved as Counselor!`);
+    const psych = approveCounselorApplication(id);
+    if (psych) {
+      showToast(`${psych.name} approved as Counselor!`);
     }
   };
 
   const handleReject = (id) => {
-    const person = approvals.find(a => a.id === id);
-    setApprovals(prev => prev.filter(a => a.id !== id));
-    showToast(`${person?.name}'s application rejected.`);
+    rejectCounselorApplication(id);
+    showToast('Counselor application rejected.');
   };
 
   const handleToggleUserStatus = (id) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
+    const updated = toggleUserStatus(id);
+    if (updated) {
+      showToast(`User status set to ${updated.status}.`);
+    }
   };
 
   const handleDeleteUser = (id) => {
-    const user = users.find(u => u.id === id);
-    setUsers(prev => prev.filter(u => u.id !== id));
-    showToast(`${user?.name} removed from platform.`);
+    deleteUserFromDB(id);
+    showToast('User removed from platform.');
   };
 
   const handleReplyQuery = (id) => {
-    setQueries(prev => prev.map(q => q.id === id ? { ...q, status: 'resolved' } : q));
+    replyToQuery(id, replyText);
     setReplyModal(null);
     setReplyText('');
     showToast('Reply sent successfully!');
   };
 
   const handleCloseQuery = (id) => {
-    setQueries(prev => prev.filter(q => q.id !== id));
+    closeQueryInDB(id);
     showToast('Query closed.');
   };
+
+  const handleUpdatePricing = async () => {
+    if (Number(starterPrice) <= 0 || Number(growthPrice) <= 0 || Number(premiumPrice) <= 0) {
+      showToast('Error: All prices must be positive numbers.');
+      return;
+    }
+    setSavingPricing(true);
+    try {
+      await updatePricingPlan('starter', Number(starterPrice));
+      await updatePricingPlan('growth', Number(growthPrice));
+      await updatePricingPlan('premium', Number(premiumPrice));
+      showToast('Pricing updated successfully!');
+    } catch (err) {
+      showToast(err.message || 'Failed to update pricing');
+    } finally {
+      setSavingPricing(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    navigate('/');
+  };
+
+  // Compute weekly sessions breakdown (Mon to Sun) from actual session records
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+  sessions.forEach(s => {
+    const d = new Date(s.createdAt || Date.now());
+    const dayIdx = (d.getDay() + 6) % 7; // Convert Sun(0) -> 6, Mon(1) -> 0
+    dayCounts[dayIdx]++;
+  });
+  const maxDayCount = Math.max(...dayCounts, 1);
+  const barHeights = dayCounts.map(count => (count / maxDayCount) * 85);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <FiBarChart2 /> },
     { id: 'users', label: 'Users', icon: <FiUsers /> },
     { id: 'approvals', label: 'Approvals', icon: <FiUserCheck /> },
     { id: 'queries', label: 'Queries', icon: <FiInbox /> },
-    { id: 'chatbot', label: 'AI Chat', icon: <FiCpu /> },
     { id: 'settings', label: 'Settings', icon: <FiSettings /> },
   ];
 
@@ -110,10 +175,10 @@ const AdminDashboard = () => {
           ))}
         </nav>
 
-        <Link to="/" className="dashboard__logout">
+        <button onClick={handleLogout} className="dashboard__logout" style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
           <FaSignOutAlt />
           <span>Logout</span>
-        </Link>
+        </button>
       </aside>
 
       <main className="dashboard__main">
@@ -136,12 +201,13 @@ const AdminDashboard = () => {
           )}
         </AnimatePresence>
 
+        {/* Real-time Calculated Statistics */}
         <div className="dashboard__stats">
           {[
-            { label: 'Total Students', value: String(users.filter(u => u.role === 'Student').length + ',140'), icon: <FaUserGraduate />, color: 'var(--pink-500)' },
-            { label: 'Counselors', value: String(users.filter(u => u.role === 'Counselor').length + 153), icon: <FaUserMd />, color: 'var(--purple-500)' },
-            { label: 'Sessions Today', value: '48', icon: <FaCalendarAlt />, color: 'var(--blue-400)' },
-            { label: 'Pending Reviews', value: String(approvals.length), icon: <FaClock />, color: 'var(--pink-600)' },
+            { label: 'Total Students', value: String(stats.totalStudents), icon: <FaUserGraduate />, color: 'var(--pink-500)' },
+            { label: 'Counsellors', value: String(stats.counselors), icon: <FaUserMd />, color: 'var(--purple-500)' },
+            { label: 'Sessions Today', value: String(stats.sessionsToday), icon: <FaCalendarAlt />, color: 'var(--blue-400)' },
+            { label: 'Pending Reviews', value: String(stats.pendingReviews), icon: <FaClock />, color: 'var(--pink-600)' },
           ].map((stat, i) => (
             <motion.div key={i} className="dashboard__stat-card glass-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <div className="dashboard__stat-icon" style={{ color: stat.color, background: `${stat.color}14` }}>{stat.icon}</div>
@@ -159,38 +225,45 @@ const AdminDashboard = () => {
             <div className="admin-overview-grid">
               <div className="admin-chart-card glass-card">
                 <h3>Weekly Sessions</h3>
-                <div className="admin-chart-placeholder">
-                  <div className="admin-bar-chart">
-                    {[65, 80, 55, 90, 75, 95, 85].map((h, i) => (
-                      <motion.div key={i} className="admin-bar" initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: i * 0.1, duration: 0.6 }} />
-                    ))}
+                {sessions.length > 0 ? (
+                  <div className="admin-chart-placeholder">
+                    <div className="admin-bar-chart">
+                      {barHeights.map((h, i) => (
+                        <motion.div key={i} className="admin-bar" initial={{ height: 0 }} animate={{ height: `${Math.max(h, 8)}%` }} transition={{ delay: i * 0.08, duration: 0.5 }} />
+                      ))}
+                    </div>
+                    <div className="admin-bar-labels">
+                      {dayNames.map((d, i) => (
+                        <span key={i}>{d}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="admin-bar-labels">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
-                      <span key={i}>{d}</span>
-                    ))}
+                ) : (
+                  <div className="dashboard__empty-state" style={{ padding: '36px 0' }}>
+                    <FaCalendarAlt className="dashboard__empty-icon" />
+                    <p>No session activity recorded yet this week.</p>
                   </div>
-                </div>
+                )}
               </div>
               <div className="admin-chart-card glass-card">
                 <h3>Recent Activity</h3>
-                <div className="admin-activity-list">
-                  {[
-                    { text: 'New student registration: Ayesha K.', time: '2 min ago', type: 'new' },
-                    { text: 'Session completed: Dr. Amna ↔ Ahmed R.', time: '15 min ago', type: 'complete' },
-                    { text: 'New counselor application: Bilal A.', time: '1 hour ago', type: 'pending' },
-                    { text: 'Payment received: Rs. 1,500', time: '2 hours ago', type: 'payment' },
-                    { text: 'Support query: Connectivity issue', time: '3 hours ago', type: 'query' },
-                  ].map((a, i) => (
-                    <div key={i} className="admin-activity-item">
-                      <div className={`admin-activity-dot admin-activity-dot--${a.type}`} />
-                      <div>
-                        <p className="admin-activity-text">{a.text}</p>
-                        <p className="admin-activity-time">{a.time}</p>
+                {activities.length > 0 ? (
+                  <div className="admin-activity-list">
+                    {activities.map((a, i) => (
+                      <div key={a.id || i} className="admin-activity-item">
+                        <div className={`admin-activity-dot admin-activity-dot--${a.type}`} />
+                        <div>
+                          <p className="admin-activity-text">{a.text}</p>
+                          <p className="admin-activity-time">{a.time}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="dashboard__empty-state" style={{ padding: '36px 0' }}>
+                    <p>No recent activity recorded.</p>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -199,44 +272,51 @@ const AdminDashboard = () => {
         {activeTab === 'users' && (
           <section className="dashboard__section">
             <h2 className="dashboard__section-title">User Management</h2>
-            <div className="admin-users-table glass-card">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td className="admin-users-table__name">{u.name}</td>
-                      <td><span className={`admin-role-badge admin-role-badge--${u.role.toLowerCase()}`}>{u.role}</span></td>
-                      <td>{u.email}</td>
-                      <td>
-                        <span
-                          className={`admin-status admin-status--${u.status.toLowerCase()} admin-status--clickable`}
-                          onClick={() => handleToggleUserStatus(u.id)}
-                          title="Click to toggle status"
-                        >
-                          {u.status}
-                        </span>
-                      </td>
-                      <td>{u.joined}</td>
-                      <td>
-                        <button className="btn-icon btn-icon--danger" onClick={() => handleDeleteUser(u.id)} title="Remove user">
-                          <FaTrash />
-                        </button>
-                      </td>
+            {users.length > 0 ? (
+              <div className="admin-users-table glass-card">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Role</th>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Joined</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.id}>
+                        <td className="admin-users-table__name">{u.name}</td>
+                        <td><span className={`admin-role-badge admin-role-badge--${u.role.toLowerCase()}`}>{u.role}</span></td>
+                        <td>{u.email}</td>
+                        <td>
+                          <span
+                            className={`admin-status admin-status--${u.status.toLowerCase()} admin-status--clickable`}
+                            onClick={() => handleToggleUserStatus(u.id)}
+                            title="Click to toggle status"
+                          >
+                            {u.status}
+                          </span>
+                        </td>
+                        <td>{u.joined}</td>
+                        <td>
+                          <button className="btn-icon btn-icon--danger" onClick={() => handleDeleteUser(u.id)} title="Remove user">
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="dashboard__empty-state">
+                <FaUsers className="dashboard__empty-icon" />
+                <p>No users found in database.</p>
+              </div>
+            )}
           </section>
         )}
 
@@ -281,13 +361,18 @@ const AdminDashboard = () => {
                         <div className="query-card__avatar">{q.from[0]}</div>
                         <div>
                           <h4>{q.from}</h4>
-                          <span className={`admin-role-badge admin-role-badge--${q.role.toLowerCase()}`}>{q.role}</span>
+                          <span className={`admin-role-badge admin-role-badge--${(q.role || 'student').toLowerCase()}`}>{q.role || 'Student'}</span>
                         </div>
                       </div>
                       <span className={`query-card__status query-card__status--${q.status}`}>{q.status === 'open' ? '🟡 Open' : '✅ Resolved'}</span>
                     </div>
                     <h4 className="query-card__subject">{q.subject}</h4>
                     <p className="query-card__message">{q.message}</p>
+                    {q.reply && (
+                      <div style={{ marginTop: '10px', padding: '8px 12px', background: 'rgba(168, 85, 247, 0.08)', borderRadius: '8px', fontSize: '0.85rem' }}>
+                        <strong>Reply sent:</strong> {q.reply}
+                      </div>
+                    )}
                     <div className="query-card__footer">
                       <span className="query-card__time">{q.time}</span>
                       <div className="query-card__actions">
@@ -320,7 +405,7 @@ const AdminDashboard = () => {
                     <h3 className="modal__name">Reply to: {replyModal.from}</h3>
                     <p className="modal__designation">Re: {replyModal.subject}</p>
                     <div className="modal__original-msg">
-                      <p>"{replyModal.message}"</p>
+                      <p>&quot;{replyModal.message}&quot;</p>
                     </div>
                     <textarea className="modal__textarea" rows="5" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Type your reply..." />
                     <div className="modal__actions">
@@ -332,13 +417,6 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </section>
-        )}
-
-        {activeTab === 'chatbot' && (
-          <section className="dashboard__section">
-            <h2 className="dashboard__section-title">AI Assistant</h2>
-            <AIChatbot />
           </section>
         )}
 
@@ -362,17 +440,34 @@ const AdminDashboard = () => {
                 <h3>Pricing (PKR)</h3>
                 <div className="settings-card__item">
                   <label>Starter Plan</label>
-                  <input type="number" defaultValue="500" />
+                  <input
+                    type="number"
+                    value={starterPrice}
+                    onChange={(e) => setStarterPrice(e.target.value)}
+                    min="1"
+                  />
                 </div>
                 <div className="settings-card__item">
                   <label>Growth Plan</label>
-                  <input type="number" defaultValue="1500" />
+                  <input
+                    type="number"
+                    value={growthPrice}
+                    onChange={(e) => setGrowthPrice(e.target.value)}
+                    min="1"
+                  />
                 </div>
                 <div className="settings-card__item">
                   <label>Premium Plan</label>
-                  <input type="number" defaultValue="3000" />
+                  <input
+                    type="number"
+                    value={premiumPrice}
+                    onChange={(e) => setPremiumPrice(e.target.value)}
+                    min="1"
+                  />
                 </div>
-                <button className="btn btn-primary" onClick={() => showToast('Pricing updated!')}>Update Pricing</button>
+                <button className="btn btn-primary" onClick={handleUpdatePricing} disabled={savingPricing}>
+                  {savingPricing ? 'Saving...' : 'Update Pricing'}
+                </button>
               </div>
             </div>
           </section>

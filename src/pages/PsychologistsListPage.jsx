@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowRight, FiMapPin } from 'react-icons/fi';
-import { psychologists } from '../data/psychologists';
+import { subscribePsychologists } from '../services/db';
 import PsychAvatar from '../components/PsychAvatar';
 import './PsychologistsListPage.css';
 
@@ -21,8 +21,14 @@ const stagger = {
 };
 
 const PsychologistsListPage = () => {
+  const [psychList, setPsychList] = useState([]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    const unsub = subscribePsychologists((list) => {
+      setPsychList(list);
+    }, true);
+    return unsub;
   }, []);
 
   return (
@@ -50,7 +56,7 @@ const PsychologistsListPage = () => {
             viewport={{ once: true, margin: '-50px' }}
             variants={stagger}
           >
-            {psychologists.map((p, i) => (
+            {psychList.map((p, i) => (
               <motion.div key={p.slug} variants={fadeUp} custom={i}>
                 <Link to={`/psychologists/${p.slug}`} className="psych-list-card glass-card">
                   <PsychAvatar name={p.name} image={p.image} size={68} />

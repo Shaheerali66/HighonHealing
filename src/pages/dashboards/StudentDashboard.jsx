@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaUserMd, FaCalendarAlt, FaComments, FaChartLine,
@@ -8,29 +8,56 @@ import {
 } from 'react-icons/fa';
 import { FiUsers, FiCalendar, FiMessageCircle, FiActivity, FiCpu } from 'react-icons/fi';
 import AIChatbot from '../../components/AIChatbot';
+import PsychAvatar from '../../components/PsychAvatar';
+import { subscribePsychologists, subscribeSessions, bookSessionInDB, updateSessionStatus } from '../../services/db';
+import { getCurrentUser, logoutUser, onAuthChange } from '../../services/auth';
 import logoImg from '../../assets/logo.png';
 import './Dashboards.css';
 
-const consultants = [
-  { id: 1, name: 'Dr. Amna Shah', designation: 'Clinical Psychology Intern', qualification: 'MSc Clinical Psychology', rating: 4.9, sessions: 120, initial: 'A' },
-  { id: 2, name: 'Hira Malik', designation: 'Counseling Trainee', qualification: 'BSc Psychology (Final Year)', rating: 4.7, sessions: 85, initial: 'H' },
-  { id: 3, name: 'Usman Ali', designation: 'Behavioral Therapist', qualification: 'MSc Applied Psychology', rating: 4.8, sessions: 95, initial: 'U' },
-  { id: 4, name: 'Sara Qureshi', designation: 'Cognitive Therapist', qualification: 'BSc Psychology', rating: 4.6, sessions: 60, initial: 'S' },
-  { id: 5, name: 'Zara Khan', designation: 'Wellness Counselor', qualification: 'MSc Psychology', rating: 4.9, sessions: 150, initial: 'Z' },
-  { id: 6, name: 'Bilal Ahmed', designation: 'Youth Counselor', qualification: 'BSc Psychology (Honors)', rating: 4.5, sessions: 45, initial: 'B' },
-];
-
 const StudentDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('directory');
   const [searchQuery, setSearchQuery] = useState('');
   const [contactModal, setContactModal] = useState(null);
   const [contactSuccess, setContactSuccess] = useState(null);
+
+  // Authenticated user
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser() || { name: 'Student', role: 'Student' });
+
+  // Centralized Database-driven state
+  const [consultants, setConsultants] = useState([]);
   const [bookedSessions, setBookedSessions] = useState([]);
 
+  useEffect(() => {
+    const unsubAuth = onAuthChange((u) => {
+      if (u) setCurrentUser(u);
+    });
+
+    const unsubPsych = subscribePsychologists(setConsultants, true);
+
+    const unsubSessions = subscribeSessions((sessions) => {
+      const myId = currentUser?.id;
+      const myName = currentUser?.name;
+      const mySessions = sessions.filter(s =>
+        (myId && s.studentId === myId) ||
+        (myName && s.studentName.toLowerCase() === myName.toLowerCase())
+      );
+      setBookedSessions(mySessions);
+    });
+
+    return () => {
+      unsubAuth();
+      unsubPsych();
+      unsubSessions();
+    };
+  }, [currentUser?.id, currentUser?.name]);
+
   const filteredConsultants = consultants.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.qualification.toLowerCase().includes(searchQuery.toLowerCase())
+    (c.name && c.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (c.title && c.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (c.credentials && c.credentials.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (c.affiliation && c.affiliation.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (c.specializations && c.specializations.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())))
   );
 
   const handleContact = (consultant) => {
@@ -38,22 +65,25 @@ const StudentDashboard = () => {
   };
 
   const handleBookSession = (consultant, type) => {
-    const newSession = {
-      id: Date.now(),
-      counselor: consultant.name,
-      type: type,
-      date: new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-      time: type === 'Video Call' ? '3:00 PM' : type === 'Chat' ? '5:00 PM' : '4:00 PM',
-      status: 'upcoming',
-    };
-    setBookedSessions((prev) => [newSession, ...prev]);
+    bookSessionInDB({
+      studentId: currentUser?.id,
+      studentName: currentUser?.name || 'Student',
+      counselorId: consultant.id,
+      counselorName: consultant.name,
+      type,
+    });
     setContactModal(null);
     setContactSuccess(consultant.name);
-    setTimeout(() => setContactSuccess(null), 3000);
+    setTimeout(() => setContactSuccess(null), 3500);
   };
 
   const handleCancelSession = (sessionId) => {
-    setBookedSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    updateSessionStatus(sessionId, 'cancelled');
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    navigate('/');
   };
 
   const tabs = [
@@ -86,21 +116,23 @@ const StudentDashboard = () => {
           ))}
         </nav>
 
-        <Link to="/" className="dashboard__logout">
+        <button onClick={handleLogout} className="dashboard__logout" style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
           <FaSignOutAlt />
           <span>Logout</span>
-        </Link>
+        </button>
       </aside>
 
       {/* Main Content */}
       <main className="dashboard__main">
         <header className="dashboard__header">
           <div>
-            <h1 className="dashboard__welcome">Welcome back, <span className="accent-text">Student</span> 👋</h1>
+            <h1 className="dashboard__welcome">
+              Welcome back, <span className="accent-text">{currentUser?.name || 'Student'}</span> 👋
+            </h1>
             <p className="dashboard__date">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
           <div className="dashboard__header-actions">
-            <div className="dashboard__avatar">S</div>
+            <div className="dashboard__avatar">{currentUser?.name ? currentUser.name[0] : 'S'}</div>
           </div>
         </header>
 
@@ -118,13 +150,13 @@ const StudentDashboard = () => {
           )}
         </AnimatePresence>
 
-        {/* Stats */}
+        {/* User-Specific Real-Time Stats */}
         <div className="dashboard__stats">
           {[
-            { label: 'Total Sessions', value: String(12 + bookedSessions.length), icon: <FaCalendarAlt />, color: 'var(--pink-500)' },
-            { label: 'Messages', value: '28', icon: <FaComments />, color: 'var(--purple-500)' },
-            { label: 'Mood Score', value: '8.2', icon: <FaChartLine />, color: 'var(--blue-400)' },
-            { label: 'AI Interactions', value: '45', icon: <FaRobot />, color: 'var(--pink-600)' },
+            { label: 'Total Sessions', value: String(bookedSessions.length), icon: <FaCalendarAlt />, color: 'var(--pink-500)' },
+            { label: 'Messages', value: bookedSessions.length > 0 ? String(bookedSessions.length * 2) : '0', icon: <FaComments />, color: 'var(--purple-500)' },
+            { label: 'Mood Score', value: '—', icon: <FaChartLine />, color: 'var(--blue-400)' },
+            { label: 'AI Interactions', value: '0', icon: <FaRobot />, color: 'var(--pink-600)' },
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -153,7 +185,7 @@ const StudentDashboard = () => {
                 <FaSearch className="dashboard__search-icon" />
                 <input
                   type="text"
-                  placeholder="Search by name, designation, or qualification..."
+                  placeholder="Search by name, title, or specialization..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="dashboard__search-input"
@@ -165,19 +197,21 @@ const StudentDashboard = () => {
             <div className="dashboard__consultants-grid">
               {filteredConsultants.map((c, i) => (
                 <motion.div
-                  key={c.id}
+                  key={c.id || c.slug}
                   className="consultant-card glass-card"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                 >
-                  <div className="consultant-card__avatar">{c.initial}</div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <PsychAvatar name={c.name} image={c.image} size={56} />
+                  </div>
                   <h3 className="consultant-card__name">{c.name}</h3>
-                  <p className="consultant-card__designation">{c.designation}</p>
-                  <p className="consultant-card__qualification">{c.qualification}</p>
+                  <p className="consultant-card__designation">{c.title || 'Clinical Specialist'}</p>
+                  <p className="consultant-card__qualification">{c.credentials || c.affiliation || c.city || 'Verified Professional'}</p>
                   <div className="consultant-card__meta">
-                    <span className="consultant-card__rating"><FaStar /> {c.rating}</span>
-                    <span className="consultant-card__sessions">{c.sessions} sessions</span>
+                    <span className="consultant-card__rating"><FaStar /> {c.rating || 5.0}</span>
+                    <span className="consultant-card__sessions">{c.sessionsCount || 0} sessions</span>
                   </div>
                   <button className="btn btn-primary consultant-card__contact-btn" onClick={() => handleContact(c)}>
                     <FaEnvelope /> Contact
@@ -187,7 +221,7 @@ const StudentDashboard = () => {
               {filteredConsultants.length === 0 && (
                 <div className="dashboard__empty-state" style={{ gridColumn: '1 / -1' }}>
                   <FaSearch className="dashboard__empty-icon" />
-                  <p>No counselors found matching "{searchQuery}"</p>
+                  <p>No counselors found matching &quot;{searchQuery}&quot;</p>
                 </div>
               )}
             </div>
@@ -201,19 +235,23 @@ const StudentDashboard = () => {
               <div className="dashboard__schedule-list">
                 {bookedSessions.map((session, i) => (
                   <motion.div key={session.id} className="schedule-item glass-card" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}>
-                    <div className="schedule-item__avatar">{session.counselor[0]}</div>
+                    <div className="schedule-item__avatar">{session.counselorName ? session.counselorName[0] : 'C'}</div>
                     <div className="schedule-item__info">
-                      <h4 className="schedule-item__name">{session.counselor}</h4>
+                      <h4 className="schedule-item__name">{session.counselorName}</h4>
                       <p className="schedule-item__type">{session.type}</p>
                     </div>
                     <div className="schedule-item__time">
                       <span className="schedule-item__clock">{session.time}</span>
                       <span className="schedule-item__date">{session.date}</span>
                     </div>
-                    <span className="schedule-item__status schedule-item__status--upcoming">Upcoming</span>
-                    <button className="btn-icon btn-icon--danger" onClick={() => handleCancelSession(session.id)} title="Cancel session">
-                      <FaTimes />
-                    </button>
+                    <span className={`schedule-item__status schedule-item__status--${session.status}`}>
+                      {session.status === 'upcoming' ? 'Upcoming' : session.status === 'completed' ? 'Completed' : 'Cancelled'}
+                    </span>
+                    {session.status === 'upcoming' && (
+                      <button className="btn-icon btn-icon--danger" onClick={() => handleCancelSession(session.id)} title="Cancel session">
+                        <FaTimes />
+                      </button>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -234,12 +272,12 @@ const StudentDashboard = () => {
               <div className="dashboard__messages-list">
                 {bookedSessions.map((session, i) => (
                   <motion.div key={session.id} className="message-preview glass-card" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                    <div className="message-preview__avatar">{session.counselor[0]}</div>
+                    <div className="message-preview__avatar">{session.counselorName ? session.counselorName[0] : 'C'}</div>
                     <div className="message-preview__info">
-                      <h4>{session.counselor}</h4>
-                      <p className="message-preview__preview">Session {session.type} scheduled for {session.date} at {session.time}</p>
+                      <h4>{session.counselorName}</h4>
+                      <p className="message-preview__preview">Session {session.type} confirmed for {session.date} at {session.time}</p>
                     </div>
-                    <span className="message-preview__time">Just now</span>
+                    <span className="message-preview__time">Active</span>
                   </motion.div>
                 ))}
               </div>
@@ -256,54 +294,12 @@ const StudentDashboard = () => {
         {activeTab === 'progress' && (
           <section className="dashboard__section">
             <h2 className="dashboard__section-title">My Progress</h2>
-            <div className="dashboard__progress-grid">
-              <div className="progress-card glass-card">
-                <h3>Mood Tracker</h3>
-                <div className="progress-card__mood-chart">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
-                    const moods = [7, 6, 8, 5, 7, 9, 8];
-                    const emojis = ['😐', '😔', '😊', '😟', '😐', '😄', '😊'];
-                    return (
-                      <div key={i} className="progress-card__mood-day">
-                        <span className="progress-card__mood-emoji">{emojis[i]}</span>
-                        <motion.div
-                          className="progress-card__mood-bar"
-                          initial={{ height: 0 }}
-                          animate={{ height: `${moods[i] * 10}%` }}
-                          transition={{ delay: i * 0.1, duration: 0.5 }}
-                        />
-                        <span className="progress-card__mood-label">{day}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="progress-card glass-card">
-                <h3>Wellness Goals</h3>
-                <div className="progress-card__goals">
-                  {[
-                    { goal: 'Meditate daily', progress: 70 },
-                    { goal: 'Sleep 8 hours', progress: 85 },
-                    { goal: 'Exercise 3x/week', progress: 50 },
-                    { goal: 'Journal feelings', progress: 60 },
-                  ].map((g, i) => (
-                    <div key={i} className="progress-card__goal-item">
-                      <div className="progress-card__goal-header">
-                        <span>{g.goal}</span>
-                        <span className="progress-card__goal-pct">{g.progress}%</span>
-                      </div>
-                      <div className="progress-card__goal-track">
-                        <motion.div
-                          className="progress-card__goal-fill"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${g.progress}%` }}
-                          transition={{ delay: i * 0.15, duration: 0.6 }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="dashboard__empty-state" style={{ padding: '48px 0' }}>
+              <FiActivity className="dashboard__empty-icon" />
+              <p style={{ marginTop: '12px', fontSize: '1rem' }}>No mood logs recorded yet. Begin by tracking your daily wellness check-in.</p>
+              <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={() => setActiveTab('chatbot')}>
+                Talk with AI Assistant
+              </button>
             </div>
           </section>
         )}
@@ -334,14 +330,16 @@ const StudentDashboard = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <button className="modal__close" onClick={() => setContactModal(null)}><FaTimes /></button>
-              <div className="modal__avatar">{contactModal.initial}</div>
-              <h3 className="modal__name">{contactModal.name}</h3>
-              <p className="modal__designation">{contactModal.designation}</p>
-              <p className="modal__qualification">{contactModal.qualification}</p>
-              <div className="modal__rating">
-                <FaStar className="modal__star" /> {contactModal.rating} rating • {contactModal.sessions} sessions
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+                <PsychAvatar name={contactModal.name} image={contactModal.image} size={72} />
               </div>
-              <p className="modal__subtitle">Choose how you'd like to connect:</p>
+              <h3 className="modal__name">{contactModal.name}</h3>
+              <p className="modal__designation">{contactModal.title}</p>
+              <p className="modal__qualification">{contactModal.credentials || contactModal.affiliation || contactModal.city}</p>
+              <div className="modal__rating">
+                <FaStar className="modal__star" /> {contactModal.rating || 5.0} rating • {contactModal.sessionsCount || 0} sessions
+              </div>
+              <p className="modal__subtitle">Choose how you&apos;d like to connect:</p>
               <div className="modal__actions">
                 <button className="btn btn-primary modal__action-btn" onClick={() => handleBookSession(contactModal, 'Video Call')}>
                   <FaVideo /> Video Call

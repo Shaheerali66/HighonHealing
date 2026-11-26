@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMail, FiPhone, FiMapPin, FiSend } from 'react-icons/fi';
+import { submitSupportQuery } from '../services/db';
 import './ContactPage.css';
 
 const fadeUp = {
@@ -20,7 +21,9 @@ const ContactPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    submitSupportQuery(formData);
     setSubmitted(true);
+    setFormData({ name: '', email: '', subject: '', message: '' });
     setTimeout(() => setSubmitted(false), 4000);
   };
 

@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fa';
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { stats } from '../data/stats';
+import { subscribePricing } from '../services/db';
 import PsychologistsCarousel from '../components/PsychologistsCarousel';
 import './HomePage.css';
 
@@ -80,6 +81,15 @@ const HomePage = () => {
 
   const [testiIndex, setTestiIndex] = useState(0);
   const [visibleCards, setVisibleCards] = useState(3);
+  const [starterPrice, setStarterPrice] = useState('500');
+
+  useEffect(() => {
+    const unsub = subscribePricing((plans) => {
+      const starter = plans.find((p) => p.id === 'starter');
+      if (starter) setStarterPrice(Number(starter.price).toLocaleString());
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -367,7 +377,7 @@ const HomePage = () => {
               {
                 icon: <FaHeart />,
                 title: 'Affordable Care',
-                desc: 'Plans starting from just Rs. 500/month. Mental health support should never be a luxury.',
+                desc: `Plans starting from just Rs. ${starterPrice}/month. Mental health support should never be a luxury.`,
                 color: '#f04080',
               },
               {

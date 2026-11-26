@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiMapPin, FiGlobe, FiBriefcase, FiAward, FiClock } from 'react-icons/fi';
-import { psychologists } from '../data/psychologists';
+import { subscribePsychologists } from '../services/db';
 import PsychAvatar from '../components/PsychAvatar';
 import './PsychologistPage.css';
 
@@ -18,6 +18,8 @@ const fadeUp = {
 const PsychologistPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [psychologist, setPsychologist] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -29,9 +31,23 @@ const PsychologistPage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const unsub = subscribePsychologists((list) => {
+      const found = list.find((p) => p.slug === slug);
+      setPsychologist(found || null);
+      setLoading(false);
+    }, false);
+    return unsub;
   }, [slug]);
 
-  const psychologist = psychologists.find((p) => p.slug === slug);
+  if (loading) {
+    return (
+      <main className="psych-detail-page section-padding">
+        <div className="container" style={{ textAlign: 'center', padding: '60px 0' }}>
+          <p style={{ color: 'var(--charcoal-500)' }}>Loading profile...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!psychologist) {
     return (

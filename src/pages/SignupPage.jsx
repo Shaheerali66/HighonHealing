@@ -2,18 +2,33 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaUser, FaUserGraduate, FaUserMd, FaUserShield } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { signupUser } from '../services/auth';
 import logoImg from '../assets/logo.png';
 import './AuthPages.css';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '', role: 'student' });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate(`/dashboard/${formData.role}`);
+    setLoading(true);
+    try {
+      await signupUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+      navigate(`/dashboard/${formData.role}`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const roles = [

@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { psychologists } from '../data/psychologists';
+import { subscribePsychologists } from '../services/db';
 import PsychAvatar from './PsychAvatar';
 import './PsychologistsCarousel.css';
 
@@ -14,11 +15,24 @@ const fadeUp = {
 };
 
 const PsychologistsCarousel = () => {
-  const row1 = psychologists.slice(0, 3);
-  const row2 = psychologists.slice(3, 6);
+  const [psychList, setPsychList] = useState([]);
+
+  useEffect(() => {
+    const unsub = subscribePsychologists((list) => {
+      setPsychList(list);
+    }, true);
+    return unsub;
+  }, []);
+
+  const mid = Math.ceil(psychList.length / 2);
+  const row1 = psychList.slice(0, mid);
+  const row2 = psychList.slice(mid);
 
   // Repeat each row 4× so each half of the track is wider than the viewport
-  const repeat = (arr, times) => Array.from({ length: times }, () => arr).flat();
+  const repeat = (arr, times) => {
+    if (!arr || arr.length === 0) return [];
+    return Array.from({ length: times }, () => arr).flat();
+  };
 
   const renderCard = (p, key) => (
     <Link to={`/psychologists/${p.slug}`} className="psych-card glass-card" key={key}>

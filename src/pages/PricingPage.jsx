@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaCheck, FaStar, FaCrown, FaRocket } from 'react-icons/fa';
 import { FiArrowRight } from 'react-icons/fi';
+import { subscribePricing } from '../services/db';
 import './PricingPage.css';
 
 const fadeUp = {
@@ -15,64 +16,20 @@ const fadeUp = {
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.15 } } };
 
-const plans = [
-  {
-    name: 'Starter',
-    icon: <FaStar />,
-    price: '500',
-    period: '/month',
-    desc: 'Perfect for students who want to explore mental wellness resources at a minimal cost.',
-    features: [
-      'AI Chatbot Access (24/7)',
-      '1 Monthly Session (30 min)',
-      'Basic Chat Support',
-      'Mood Tracking Journal',
-      'Self-Help Resources Library',
-    ],
-    cta: 'Get Started',
-    popular: false,
-    color: 'var(--pink-400)',
-  },
-  {
-    name: 'Growth',
-    icon: <FaRocket />,
-    price: '1,500',
-    period: '/month',
-    desc: 'Our most popular plan for students who need regular, consistent support.',
-    features: [
-      'Everything in Starter',
-      '4 Monthly Sessions (45 min)',
-      'Priority Chat Support',
-      'Progress Reports',
-      'Personalized Wellness Plan',
-      'Group Support Sessions',
-    ],
-    cta: 'Choose Growth',
-    popular: true,
-    color: 'var(--pink-600)',
-  },
-  {
-    name: 'Premium Care',
-    icon: <FaCrown />,
-    price: '3,000',
-    period: '/month',
-    desc: 'Comprehensive care with senior graduates for students who need dedicated, intensive support.',
-    features: [
-      'Everything in Growth',
-      '4 Video Sessions (60 min)',
-      'Unlimited Messaging',
-      'Senior Graduate Counselor',
-      'Custom Progress Tracking',
-      'Emergency Chat Support',
-      'Family Session (1/month)',
-    ],
-    cta: 'Go Premium',
-    popular: false,
-    color: 'var(--pink-800)',
-  },
-];
-
 const PricingPage = () => {
+  const [plans, setPlans] = useState([]);
+
+  useEffect(() => {
+    const unsub = subscribePricing((dbPlans) => {
+      const mapped = dbPlans.map((p) => ({
+        ...p,
+        icon: p.id === 'starter' ? <FaStar /> : p.id === 'growth' ? <FaRocket /> : <FaCrown />,
+        price: Number(p.price).toLocaleString(),
+      }));
+      setPlans(mapped);
+    });
+    return unsub;
+  }, []);
   return (
     <main className="pricing-page" id="pricing-page">
       <section className="pricing-hero">
