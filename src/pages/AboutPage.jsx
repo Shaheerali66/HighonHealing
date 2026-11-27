@@ -107,7 +107,7 @@ const AboutPage = () => {
               { name: 'Mahnoor Aziz', role: 'Founder & Lead', initial: 'M', image: '' },
               { name: 'Zainab Memon', role: 'Co-Founder & Vision Architect', initial: 'Z', image: '' },
               { name: 'Mishal', role: 'Head of Community & Care', initial: 'M', image: '' },
-              { name: 'Jawahir Lal', role: 'Product & Growth Strategist', initial: 'J', image: '' },
+              { name: 'Jawaher Lal', role: 'Product & Growth Strategist', initial: 'J', image: '' },
             ].map((m, i) => (
               <motion.div className="about-team-card glass-card" key={i} variants={fadeUp} custom={i}>
                 <div className="about-team-card__avatar">
