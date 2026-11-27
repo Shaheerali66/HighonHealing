@@ -64,7 +64,7 @@ const Footer = () => {
               </li>
               <li className="footer__contact-item">
                 <FiMapPin className="footer__contact-icon" />
-                <span>Islamabad, Pakistan</span>
+                <span>Hyderabad, Pakistan</span>
               </li>
             </ul>
           </div>
